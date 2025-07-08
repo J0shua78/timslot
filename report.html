@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UTP - HTML Class Meeting Voting Report</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary-color: #005f87; /* UTP blue */
+      --secondary-color: #e6f2f8;
+      --accent-color: #ff6b35;
+      --text-color: #333;
+      --light-gray: #f5f5f5;
+      --medium-gray: #e0e0e0;
+      --dark-gray: #555;
+      --white: #ffffff;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-color);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: var(--light-gray);
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 1rem 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    
+    .logo {
+      height: 50px;
+    }
+    
+    nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+    
+    nav a:hover, nav a:focus {
+      border-bottom-color: var(--white);
+    }
+    
+    main {
+      flex: 1;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
+    .container {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    
+    .page-title {
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .report-section {
+      margin-bottom: 3rem;
+    }
+    
+    .report-title {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+    
+    th {
+      background-color: var(--primary-color);
+      color: var(--white);
+      font-weight: 500;
+    }
+    
+    tr {
+      background-color: var(--white);
+    }
+    
+    .highlight {
+      background-color: #fffacd;
+      font-weight: bold;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 400px;
+      margin: 2rem 0;
+    }
+    
+    footer {
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    
+    footer h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    
+    footer p {
+      margin: 0.5rem 0;
+      opacity: 0.9;
+    }
+    
+    footer a {
+      color: var(--white);
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    footer a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+      
+      nav {
+        gap: 1rem;
+      }
+      
+      th, td {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+      }
+      
+      .chart-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo-container">
+        <img src="https://www.utp.edu.my/SiteAssets/UTP-logo2.png" alt="UTP Logo" class="logo">
+      </div>
+      <nav>
+        <a href="./index.html">Home</a>
+        <a href="./register.html">Registration</a>
+        <a href="./event.html">Event</a>
+        <a href="./report.html">Report</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <h1 class="page-title">Report and Chart</h1>
+      
+      <div class="report-section">
+        <h2 class="report-title" id="eventReportTitle">Loading event...</h2>
+        
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th id="timeSlotHeader">Loading date...</th>
+              <th>Number of Votes</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <!-- Results will be loaded dynamically -->
+          </tbody>
+        </table>
+        
+        <div class="chart-container">
+          <canvas id="votesChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <h3>Contact Us</h3>
+      <p>Universiti Teknologi PETRONAS</p>
+      <p>32610 Seri Iskandar</p>
+      <p>Perak Darul Ridzuan, Malaysia</p>
+      <p>Tel: 1-300-22-8887</p>
+      <p>Email: html-class@utp.edu.my</p>
+      <p><a href="https://www.utp.edu.my" target="_blank">https://www.utp.edu.my</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize Firebase with your config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0xzbDaEwp9Z6g7TJ24UCXulWtglNQE2o",
+      authDomain: "myproject-6e550.firebaseapp.com",
+      databaseURL: "https://myproject-6e550-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "myproject-6e550",
+      storageBucket: "myproject-6e550.firebasestorage.app",
+      messagingSenderId: "513284407464",
+      appId: "1:513284407464:web:30873301ebf6a4db94829d"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const EVENT_ID = "event0"; // Constant for our single event ID
+
+    // Global variables
+    let votesChart;
+    let eventData;
+
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadEventData();
+      loadVotingResults();
+    });
+
+    // Load event data from Firestore
+    async function loadEventData() {
+      try {
+        const doc = await db.collection('events').doc(EVENT_ID).get();
+        
+        if (doc.exists) {
+          eventData = doc.data();
+          
+          // Display event information
+          document.getElementById('eventReportTitle').textContent = eventData.eventTitle || 'Event Title';
+          
+          // Format and display event date in table header
+          if (eventData.eventDate) {
+            const eventDate = eventData.eventDate.toDate();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('timeSlotHeader').textContent = 
+              eventDate.toLocaleDateString('en-US', options);
+          }
+        } else {
+          console.error("Event configuration not found");
+        }
+      } catch (error) {
+        console.error("Error loading event data:", error);
+      }
+    }
+
+    // Load voting results from Firestore
+    async function loadVotingResults() {
+      try {
+        // First get all time slots from the event
+        const eventDoc = await db.collection('events').doc(EVENT_ID).get();
+        if (!eventDoc.exists) {
+          throw new Error("Event not found");
+        }
+        
+        const eventData = eventDoc.data();
+        let timeSlots = eventData.timeSlots || [];
+        
+        // Sort time slots chronologically by start time
+        timeSlots = timeSlots.sort((a, b) => {
+          const aStart = a.startTime.toDate().getTime();
+          const bStart = b.startTime.toDate().getTime();
+          
+          // If start times are different, sort by start time
+          if (aStart !== bStart) {
+            return aStart - bStart;
+          }
+          
+          // If start times are equal, sort by end time
+          return a.endTime.toDate().getTime() - b.endTime.toDate().getTime();
+        });
+
+        
+        // Get all votes for this event
+        const votesSnapshot = await db.collection('votes')
+          .where('eventId', '==', EVENT_ID)
+          .get();
+        
+        // Initialize vote counts for each formattedTime
+        const voteCounts = {};
+        timeSlots.forEach(slot => {
+          voteCounts[slot.formattedTime] = 0;
+        });
+        
+        // Count votes for each formattedTime
+        votesSnapshot.forEach(doc => {
+          const vote = doc.data();
+          if (vote.formattedTime && voteCounts.hasOwnProperty(vote.formattedTime)) {
+            voteCounts[vote.formattedTime]++;
+          }
+        });
+        
+        // Convert to array for display (already sorted by time)
+        const results = timeSlots.map(slot => ({
+          formattedTime: slot.formattedTime,
+          count: voteCounts[slot.formattedTime] || 0
+        }));
+        
+        // Find the time slot with the most votes for highlighting
+        const maxVotes = Math.max(...results.map(r => r.count));
+        
+        // Display results in table
+        const resultsBody = document.getElementById('resultsBody');
+        resultsBody.innerHTML = '';
+        
+        results.forEach((result, index) => {
+          const row = document.createElement('tr');
+          if (result.count === maxVotes && maxVotes > 0) {
+            row.classList.add('highlight');
+          }
+          row.innerHTML = `
+            <td>${result.formattedTime}</td>
+            <td>${result.count}</td>
+          `;
+          resultsBody.appendChild(row);
+        });
+        
+        // Prepare data for chart
+        const labels = results.map(result => result.formattedTime);
+        const data = results.map(result => result.count);
+        
+        // Create or update chart
+        renderChart(labels, data);
+        
+      } catch (error) {
+        console.error("Error loading voting results:", error);
+      }
+    }
+
+    // Render the chart using Chart.js
+    function renderChart(labels, data) {
+      const ctx = document.getElementById('votesChart').getContext('2d');
+      
+      // Destroy previous chart if it exists
+      if (votesChart) {
+        votesChart.destroy();
+      }
+      
+      // Find index of time slot with most votes
+      const maxVotesIndex = data.indexOf(Math.max(...data));
+      
+      votesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Number of Votes',
+            data: data,
+            backgroundColor: labels.map((_, i) => 
+              i === maxVotesIndex && data[maxVotesIndex] > 0 
+                ? 'rgba(255, 107, 53, 0.7)' 
+                : 'rgba(0, 95, 135, 0.7)'
+            ),
+            borderColor: labels.map((_, i) => 
+              i === maxVotesIndex && data[maxVotesIndex] > 0
+                ? 'rgba(255, 107, 53, 1)' 
+                : 'rgba(0, 95, 135, 1)'
+            ),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `Votes: ${context.raw}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

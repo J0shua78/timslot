@@ -297,7 +297,7 @@
       <div class="form-group" id="studentIdSection">
         <label for="studentId">UTP Student ID</label>
         <input type="text" id="studentId" placeholder="Enter your student ID">
-        <button class="btn" id="findBtn" onclick="verifyStudent()">Verify</button>
+        <button class="btn" id="findBtn" onclick="verifyStudent()">Find</button>
         <div id="idError" class="alert alert-error"></div>
       </div>
       
@@ -505,7 +505,7 @@
       } finally {
         // Re-enable button
         findBtn.disabled = false;
-        findBtn.textContent = "Verify";
+        findBtn.textContent = "Find";
       }
     }
     

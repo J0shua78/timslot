@@ -1,23 +1,3 @@
-import { db } from './firebase-config.js';
-
-// Initialize Firebase with your config
-    /*const firebaseConfig = {
-      apiKey: "AIzaSyA0xzbDaEwp9Z6g7TJ24UCXulWtglNQE2o",
-      authDomain: "myproject-6e550.firebaseapp.com",
-      databaseURL: "https://myproject-6e550-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "myproject-6e550",
-      storageBucket: "myproject-6e550.firebasestorage.app",
-      messagingSenderId: "513284407464",
-      appId: "1:513284407464:web:30873301ebf6a4db94829d"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const EVENT_ID = "event0"; // Constant for our single event ID
-    */
-
-
 
     // Global variables
     let votingDeadline;

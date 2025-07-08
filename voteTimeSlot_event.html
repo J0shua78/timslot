@@ -7,6 +7,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <style>
     :root {
       --primary-color: #005f87; /* UTP blue */
@@ -114,6 +115,8 @@
     input[type="date"],
     input[type="datetime-local"],
     input[type="number"],
+    input[type="email"],
+    input[type="password"],
     textarea,
     select {
       width: 100%;
@@ -259,6 +262,44 @@
       padding: 0 2rem;
     }
     
+    /* Login form styles */
+    .login-container {
+      max-width: 400px;
+      margin: 2rem auto;
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .login-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--primary-color);
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .logout-btn {
+      background: var(--error-color);
+      color: var(--white);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s;
+    }
+    
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+    
     @media (max-width: 768px) {
       .header-content {
         flex-direction: column;
@@ -281,6 +322,16 @@
       
       .form-row {
         flex-direction: column;
+      }
+      
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .logout-btn {
+        align-self: flex-end;
       }
     }
     
@@ -312,8 +363,27 @@
   </header>
 
   <main>
-    <div class="container">
-      <h2>Event Configuration</h2>
+    <div id="loginContainer" class="login-container" style="display: none;">
+      <h2 class="login-title">Admin Login</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn">Login</button>
+        <div id="loginError" class="alert alert-error" style="display: none;"></div>
+      </form>
+    </div>
+
+    <div id="eventConfigContainer" class="container" style="display: none;">
+      <div class="section-header">
+        <h2>Event Configuration</h2>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
       
       <form id="eventForm">
         <div class="form-group">
@@ -386,9 +456,68 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
     const EVENT_ID = "event0"; // Constant for our single event ID
 
-    document.addEventListener('DOMContentLoaded', function() {
+    // DOM elements
+    const loginContainer = document.getElementById('loginContainer');
+    const eventConfigContainer = document.getElementById('eventConfigContainer');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Authentication state observer
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // User is signed in
+        showEventConfig();
+      } else {
+        // No user is signed in
+        showLoginForm();
+      }
+    });
+
+    function showLoginForm() {
+      loginContainer.style.display = 'block';
+      eventConfigContainer.style.display = 'none';
+    }
+
+    function showEventConfig() {
+      loginContainer.style.display = 'none';
+      eventConfigContainer.style.display = 'block';
+      initEventConfig();
+    }
+
+    function signOut() {
+      auth.signOut().then(() => {
+        // Sign-out successful.
+      }).catch(error => {
+        console.error('Sign out error:', error);
+      });
+    }
+
+    // Login form submission
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      loginError.style.display = 'none';
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        // Success - auth state observer will handle the UI change
+      } catch (error) {
+        console.error('Login error:', error);
+        loginError.textContent = "Invalid email/password";
+        loginError.style.display = 'block';
+      }
+    });
+
+    // Logout button click
+    logoutBtn.addEventListener('click', signOut);
+
+    function initEventConfig() {
       const timeSlotsContainer = document.getElementById('timeSlotsContainer');
       const addTimeSlotBtn = document.getElementById('addTimeSlotBtn');
       const votesPerUserInput = document.getElementById('votesPerUser');
@@ -512,8 +641,6 @@
         const alertDiv = document.getElementById(`form${type.charAt(0).toUpperCase() + type.slice(1)}`);
         alertDiv.textContent = message;
         alertDiv.style.display = 'block';
-        
-        // Removed the timeout that was hiding the message after 5 seconds
       }
       
       async function loadExistingConfiguration() {
@@ -555,8 +682,6 @@
                 addTimeSlot(startTimeStr, endTimeStr);
               });
             }
-            
-            //showAlert('success', 'Loaded existing configuration');
           }
         } catch (error) {
           console.error("Error loading configuration:", error);
@@ -626,11 +751,6 @@
         // Date validation
         const eventDateObj = new Date(eventDate);
         const votingDeadlineObj = new Date(votingDeadline);
-        
-        /*if (votingDeadlineObj <= new Date()) {
-          showAlert('error', "Voting deadline must be in the future.");
-          return;
-        }*/
         
         try {
           // Create/update event in Firestore with your specified schema
@@ -717,7 +837,7 @@
         date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
         return firebase.firestore.Timestamp.fromDate(date);
       }
-    });
+    }
   </script>
 </body>
 </html>

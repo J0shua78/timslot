@@ -24,9 +24,5 @@ window.firebaseServices = {
   firebaseApp,
   db,
   auth,
-  EVENT_ID,
-  helpers: {
-    formatTimeToAMPM,
-    convertTimeStringToTimestamp
-  }
+  EVENT_ID
 };

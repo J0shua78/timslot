@@ -253,3 +253,4 @@
         submitBtn.textContent = "Submit Vote";
       }
     }
+    

@@ -116,7 +116,7 @@
         const studentDoc = await db.collection('students').doc(studentId).get();
         
         if (!studentDoc.exists) {
-          errorDiv.innerHTML = "Student ID not registered yet. Please click <a href='./resgister.html' class='registration-link'>Registration</a> at the top to register.";
+          errorDiv.innerHTML = "Student ID not registered yet. Please click <a href='./register.html' class='registration-link'>Registration</a> at the top to register.";
           errorDiv.style.display = "block";
           votingSection.style.display = "none";
           currentStudentId = null;
@@ -253,4 +253,3 @@
         submitBtn.textContent = "Submit Vote";
       }
     }
-    
